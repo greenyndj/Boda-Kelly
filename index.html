@@ -662,7 +662,7 @@
         // Datos del invitado
         document.getElementById("displayGuestName").innerText = guest.nombre;
         const cuposNum = guest.cupos || 1;
-        document.getElementById("displayGuestPasses").innerText = `${cuposNum} ${cuposNum > 1 ? 'Cupos Reservados' : 'Cupo Reservado'}`;
+        document.getElementById("displayGuestPasses").innerText = `${cuposNum} ${cuposNum > 1 ? 'Cupos ' : 'Cupo '}`;
 
         // Enlace WhatsApp
         const textoMsg = encodeURIComponent(`¡Hola Brian y Kelly! Confirmo asistencia a su boda.\n\nInvitado: ${guest.nombre}\nCupos confirmados: ${cuposNum}\nCódigo: ${guest.codigo}`);
