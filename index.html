@@ -1,0 +1,710 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Brian & Kelly — Nuestra Boda</title>
+
+  <!-- Tipografías elegantes -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,400&family=Montserrat:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+  <!-- Librería para leer archivos Excel (.xlsx) -->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+
+  <style>
+    :root {
+      --bg-page: #f7f5f0;
+      --card-bg: #ffffff;
+      --gold-main: #b89758;
+      --gold-dark: #8c6f37;
+      --gold-soft: #ebdcc4;
+      --text-title: #2b2621;
+      --text-body: #615a52;
+      --text-muted: #91887e;
+      --radius-card: 20px;
+      --shadow-card: 0 12px 30px rgba(0, 0, 0, 0.05);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg-page);
+      font-family: 'Montserrat', sans-serif;
+      color: var(--text-body);
+      display: flex;
+      justify-content: center;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* Contenedor invisible para el reproductor de YouTube */
+    #ytPlayerContainer {
+      position: absolute;
+      top: -9999px;
+      left: -9999px;
+      width: 1px;
+      height: 1px;
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    /* --- PANTALLA DE ACCESO CON CÓDIGO --- */
+    #gateScreen {
+      position: fixed;
+      inset: 0;
+      background-color: var(--bg-page);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+      padding: 20px;
+    }
+
+    .gate-box {
+      background: #ffffff;
+      max-width: 380px;
+      width: 100%;
+      padding: 40px 24px;
+      border-radius: var(--radius-card);
+      box-shadow: 0 15px 40px rgba(0,0,0,0.08);
+      border: 1px solid var(--gold-soft);
+      text-align: center;
+    }
+
+    .gate-title {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 2.2rem;
+      color: var(--gold-dark);
+      margin-bottom: 6px;
+    }
+
+    .gate-desc {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      margin-bottom: 24px;
+    }
+
+    .gate-input {
+      width: 100%;
+      padding: 14px 16px;
+      border: 1px solid var(--gold-soft);
+      border-radius: 30px;
+      font-size: 1rem;
+      text-align: center;
+      margin-bottom: 16px;
+      outline: none;
+      font-family: 'Montserrat', sans-serif;
+    }
+
+    .gate-input:focus {
+      border-color: var(--gold-main);
+    }
+
+    .gate-btn {
+      width: 100%;
+      padding: 14px;
+      border-radius: 30px;
+      background: linear-gradient(135deg, #c7a768 0%, #a88440 100%);
+      color: white;
+      border: none;
+      font-weight: 600;
+      font-size: 0.85rem;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      cursor: pointer;
+      box-shadow: 0 4px 15px rgba(168, 132, 64, 0.25);
+    }
+
+    .gate-error {
+      color: #b33939;
+      font-size: 0.8rem;
+      margin-top: 12px;
+      display: none;
+    }
+
+    /* --- BOTÓN FLOTANTE DE MÚSICA --- */
+    .btn-musica {
+      position: fixed;
+      top: 18px;
+      right: 18px;
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.92);
+      border: 1.5px solid var(--gold-soft);
+      color: var(--gold-dark);
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.2rem;
+      cursor: pointer;
+      z-index: 1000;
+      transition: transform 0.2s ease;
+      backdrop-filter: blur(4px);
+    }
+
+    .btn-musica:active {
+      transform: scale(0.92);
+    }
+
+    /* --- INVITACIÓN PRINCIPAL --- */
+    .app-wrapper {
+      display: none;
+      width: 100%;
+      max-width: 440px;
+      min-height: 100vh;
+      background-color: var(--bg-page);
+      box-shadow: 0 0 45px rgba(0,0,0,0.1);
+      position: relative;
+      padding-bottom: 70px;
+    }
+
+    .hero-header {
+      position: relative;
+      height: 480px;
+      background: linear-gradient(180deg, rgba(28, 20, 15, 0.25) 0%, rgba(35, 26, 18, 0.75) 60%, var(--bg-page) 100%),
+                  url('https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=900&q=80');
+      background-size: cover;
+      background-position: center 25%;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      align-items: center;
+      text-align: center;
+      padding: 30px 24px 20px;
+      color: #ffffff;
+    }
+
+    .hero-title {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 3.2rem;
+      font-weight: 400;
+      line-height: 1.1;
+      color: #ffffff;
+      text-shadow: 0 2px 14px rgba(0, 0, 0, 0.45);
+    }
+
+    .hero-title span {
+      font-style: italic;
+      color: #f1dfc4;
+      font-weight: 300;
+    }
+
+    .hero-subtitle {
+      font-size: 0.85rem;
+      letter-spacing: 4px;
+      text-transform: uppercase;
+      font-weight: 500;
+      color: #e5d7c3;
+      margin: 10px 0 4px;
+    }
+
+    .hero-date {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.25rem;
+      font-style: italic;
+      color: #f7f4ed;
+      margin-bottom: 12px;
+    }
+
+    .hero-quote {
+      font-size: 0.85rem;
+      line-height: 1.5;
+      color: #f1ede6;
+      max-width: 320px;
+      font-weight: 300;
+    }
+
+    .content {
+      padding: 0 18px;
+      margin-top: -10px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .card {
+      background: var(--card-bg);
+      border-radius: var(--radius-card);
+      padding: 26px 20px;
+      box-shadow: var(--shadow-card);
+      border: 1px solid rgba(184, 151, 88, 0.12);
+      text-align: center;
+    }
+
+    /* TARJETA DEL INVITADO */
+    .guest-card {
+      background: linear-gradient(180deg, #ffffff 0%, #faf6ee 100%);
+      border: 1.5px solid var(--gold-main);
+    }
+
+    .guest-badge {
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      color: var(--gold-dark);
+      font-weight: 600;
+      margin-bottom: 6px;
+    }
+
+    .guest-name {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 2.1rem;
+      color: var(--gold-dark);
+      font-weight: 600;
+      line-height: 1.2;
+      margin-bottom: 8px;
+    }
+
+    .guest-passes {
+      display: inline-block;
+      background: var(--gold-soft);
+      color: var(--gold-dark);
+      padding: 6px 16px;
+      border-radius: 20px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+    }
+
+    .card-icon {
+      font-size: 2rem;
+      line-height: 1;
+      margin-bottom: 10px;
+      display: inline-block;
+      color: var(--gold-main);
+    }
+
+    .card-title {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.65rem;
+      color: var(--text-title);
+      font-weight: 600;
+      margin-bottom: 6px;
+    }
+
+    .card-desc {
+      font-size: 0.86rem;
+      color: var(--text-body);
+      line-height: 1.6;
+    }
+
+    /* CONTADOR */
+    .countdown-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+      margin-top: 15px;
+    }
+
+    .countdown-item {
+      background: #faf8f5;
+      padding: 12px 4px;
+      border-radius: 12px;
+      border: 1px solid rgba(184, 151, 88, 0.18);
+    }
+
+    .countdown-number {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.85rem;
+      font-weight: 600;
+      color: var(--gold-dark);
+      line-height: 1;
+      display: block;
+    }
+
+    .countdown-tag {
+      font-size: 0.65rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--text-muted);
+      margin-top: 4px;
+      display: block;
+    }
+
+    /* MAPAS */
+    .map-buttons {
+      display: flex;
+      gap: 10px;
+      margin-top: 18px;
+    }
+
+    .btn-action {
+      flex: 1;
+      padding: 11px 0;
+      border-radius: 25px;
+      text-decoration: none;
+      font-size: 0.78rem;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+
+    .btn-secondary {
+      background-color: #f7f2ea;
+      color: var(--gold-dark);
+      border: 1px solid var(--gold-soft);
+    }
+
+    /* BOTÓN WHATSAPP */
+    .btn-primary {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      background: linear-gradient(135deg, #c7a768 0%, #a88440 100%);
+      color: #ffffff;
+      padding: 15px 20px;
+      border-radius: 30px;
+      text-decoration: none;
+      font-size: 0.88rem;
+      font-weight: 600;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      box-shadow: 0 6px 18px rgba(168, 132, 64, 0.28);
+      margin-top: 16px;
+    }
+
+    /* PALETA */
+    .color-palette {
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      margin-top: 16px;
+    }
+
+    .color-circle {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      border: 2px solid #ffffff;
+      box-shadow: 0 3px 6px rgba(0,0,0,0.1);
+    }
+
+    .palette-label {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      margin-top: 10px;
+      letter-spacing: 0.5px;
+    }
+
+    footer {
+      text-align: center;
+      margin-top: 35px;
+      font-size: 0.75rem;
+      letter-spacing: 2.5px;
+      text-transform: uppercase;
+      color: var(--gold-main);
+      font-weight: 500;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- REPRODUCTOR OCULTO DE YOUTUBE -->
+  <div id="ytPlayerContainer">
+    <div id="ytPlayer"></div>
+  </div>
+
+  <!-- PANTALLA DE BLOQUEO CON CÓDIGO -->
+  <div id="gateScreen">
+    <div class="gate-box">
+      <div style="font-size: 2rem; color: var(--gold-main); margin-bottom: 8px;">❦</div>
+      <h2 class="gate-title">Brian & Kelly</h2>
+      <p class="gate-desc">Ingresa tu código de invitación para ver tus detalles.</p>
+      
+      <input type="text" id="passCodeInput" class="gate-input" placeholder="Ej: 101" />
+      <button class="gate-btn" onclick="validarCodigo()">Abrir Invitación</button>
+      
+      <p id="gateError" class="gate-error">Código no encontrado en la lista. Verifica e intenta de nuevo.</p>
+    </div>
+  </div>
+
+  <!-- INVITACIÓN PRINCIPAL -->
+  <div class="app-wrapper" id="invitationApp">
+
+    <!-- BOTÓN FLOTANTE MÚSICA -->
+    <button id="btnMusica" class="btn-musica" onclick="toggleMusica()" title="Pausar / Reproducir">
+      🎵
+    </button>
+
+    <header class="hero-header">
+      <h1 class="hero-title">Brian <span>&</span> Kelly</h1>
+      <p class="hero-subtitle">Nuestra Boda</p>
+      <p class="hero-date">10 de Octubre de 2026</p>
+      <p class="hero-quote">
+        Te invitamos a compartir el día más importante de nuestras vidas. ¡Tu presencia lo hará inolvidable!
+      </p>
+    </header>
+
+    <div class="content">
+
+      <!-- TARJETA DEL INVITADO -->
+      <div class="card guest-card">
+        <p class="guest-badge">Invitación Especial Para:</p>
+        <h2 class="guest-name" id="displayGuestName">Cargando...</h2>
+        <div>
+          <span class="guest-passes" id="displayGuestPasses">1 Cupo Reservado</span>
+        </div>
+      </div>
+
+      <!-- CUENTA REGRESIVA -->
+      <div class="card">
+        <span class="card-icon">⏳</span>
+        <h2 class="card-title">Cuenta Regresiva</h2>
+        <p class="card-desc">Falta muy poco para dar el gran paso</p>
+        
+        <div class="countdown-grid">
+          <div class="countdown-item">
+            <span class="countdown-number" id="days">00</span>
+            <span class="countdown-tag">Días</span>
+          </div>
+          <div class="countdown-item">
+            <span class="countdown-number" id="hours">00</span>
+            <span class="countdown-tag">Horas</span>
+          </div>
+          <div class="countdown-item">
+            <span class="countdown-number" id="mins">00</span>
+            <span class="countdown-tag">Min</span>
+          </div>
+          <div class="countdown-item">
+            <span class="countdown-number" id="secs">00</span>
+            <span class="countdown-tag">Seg</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- CEREMONIA Y RECEPCIÓN -->
+      <div class="card">
+        <span class="card-icon">📍</span>
+        <h2 class="card-title">Ceremonia & Recepción</h2>
+        <p class="card-desc">
+          <strong>Sábado, 10 de octubre de 2026</strong><br>
+          Carrera 53 #47-02<br>
+          Barranquilla - Colombia
+        </p>
+
+        <div class="map-buttons">
+          <a class="btn-action btn-secondary" target="_blank" href="https://www.google.com/maps/search/?api=1&query=Carrera+53+%2347-02+Barranquilla+Colombia">
+            📍 Google Maps
+          </a>
+          <a class="btn-action btn-secondary" target="_blank" href="https://waze.com/ul?q=Carrera%2053%20%2347-02%20Barranquilla">
+            🚗 Waze
+          </a>
+        </div>
+      </div>
+
+      <!-- BOTÓN WHATSAPP -->
+      <div class="card">
+        <span class="card-icon">💌</span>
+        <h2 class="card-title">Confirmar Asistencia</h2>
+        <p class="card-desc">
+          Por favor ayúdanos confirmando tus cupos antes del 25 de septiembre.
+        </p>
+
+        <a class="btn-primary" id="btnWhatsappRSVP" target="_blank" href="#">
+          Confirmar por WhatsApp
+        </a>
+      </div>
+
+      <!-- VESTIMENTA -->
+      <div class="card">
+        <span class="card-icon">✨</span>
+        <h2 class="card-title">Código de Vestimenta</h2>
+        <p class="card-desc">
+          <strong>Casual</strong><br>
+          Ropa fresca y cómoda para disfrutar juntos toda la velada.
+        </p>
+
+        <div class="color-palette">
+          <div class="color-circle" style="background-color: #fdfbf7;" title="Blanco Marfil"></div>
+          <div class="color-circle" style="background-color: #ebdcc4;" title="Champán Claro"></div>
+          <div class="color-circle" style="background-color: #c7a768;" title="Dorado Suave"></div>
+          <div class="color-circle" style="background-color: #d1bda2;" title="Beige Arena"></div>
+          <div class="color-circle" style="background-color: #8c6f37;" title="Dorado Cálido"></div>
+        </div>
+        <p class="palette-label">Tonos sugeridos (Blanco, Champán y Dorados)</p>
+      </div>
+
+      <!-- LLUVIA DE SOBRES -->
+      <div class="card">
+        <span class="card-icon">🎁</span>
+        <h2 class="card-title">Lluvia de Sobres</h2>
+        <p class="card-desc">
+          Tu presencia es nuestro mejor regalo. Si deseas hacernos un detalle, contaremos con una urna para sobres en el salón.
+        </p>
+      </div>
+
+      <footer>
+        Brian & Kelly • 2026
+      </footer>
+
+    </div>
+  </div>
+
+  <!-- SCRIPT YOUTUBE API Y LÓGICA -->
+  <script>
+    // ==========================================
+    // 1. CONFIGURACIÓN DEL VIDEO DE YOUTUBE
+    // ==========================================
+    // Pon aquí solo el ID del video de YouTube (los caracteres después de 'v=' o de 'youtu.be/')
+    // Ejemplo: Si el enlace es https://www.youtube.com/watch?v=kJQP7kiw5Fk, el ID es 'kJQP7kiw5Fk'
+    const YOUTUBE_VIDEO_ID = 'kJQP7kiw5Fk'; 
+
+    let player;
+    let isPlaying = false;
+    const btnMusica = document.getElementById("btnMusica");
+
+    // Cargar la API de YouTube en segundo plano
+    const tag = document.createElement('script');
+    tag.src = "https://www.youtube.com/iframe_api";
+    const firstScriptTag = document.getElementsByTagName('script')[0];
+    firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+
+    function onYouTubeIframeAPIReady() {
+      player = new YT.Player('ytPlayer', {
+        height: '200',
+        width: '200',
+        videoId: YOUTUBE_VIDEO_ID,
+        playerVars: {
+          'autoplay': 0,
+          'controls': 0,
+          'loop': 1,
+          'playlist': YOUTUBE_VIDEO_ID // Necesario para que el loop funcione en YouTube
+        },
+        events: {
+          'onReady': onPlayerReady
+        }
+      });
+    }
+
+    function onPlayerReady(event) {
+      // Reproductor listo
+    }
+
+    function reproducirYouTube() {
+      if (player && player.playVideo) {
+        player.playVideo();
+        isPlaying = true;
+        btnMusica.textContent = "🎵";
+      }
+    }
+
+    function toggleMusica() {
+      if (!player) return;
+      if (isPlaying) {
+        player.pauseVideo();
+        isPlaying = false;
+        btnMusica.textContent = "🔇";
+      } else {
+        player.playVideo();
+        isPlaying = true;
+        btnMusica.textContent = "🎵";
+      }
+    }
+
+    // ==========================================
+    // 2. LECTURA DE EXCEL Y VALIDACIÓN DE CÓDIGO
+    // ==========================================
+    let invitadosLista = [];
+
+    fetch('invitados.xlsx')
+      .then(response => {
+        if (!response.ok) throw new Error("No se pudo cargar invitados.xlsx");
+        return response.arrayBuffer();
+      })
+      .then(data => {
+        const workbook = XLSX.read(data, { type: 'array' });
+        const sheetName = workbook.SheetNames[0];
+        const sheet = workbook.Sheets[sheetName];
+        invitadosLista = XLSX.utils.sheet_to_json(sheet);
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const codeParam = urlParams.get('codigo');
+        if (codeParam) {
+          document.getElementById("passCodeInput").value = codeParam;
+          validarCodigo();
+        }
+      })
+      .catch(err => {
+        console.warn("Verifica que invitados.xlsx esté subido correctamente.", err);
+      });
+
+    function validarCodigo() {
+      const codeInput = document.getElementById("passCodeInput").value.trim();
+      const errorMsg = document.getElementById("gateError");
+
+      if (!codeInput) {
+        errorMsg.style.display = "block";
+        errorMsg.innerText = "Por favor escribe tu código de invitación.";
+        return;
+      }
+
+      const guest = invitadosLista.find(item => String(item.codigo).trim() === codeInput);
+
+      if (guest) {
+        document.getElementById("gateScreen").style.display = "none";
+        document.getElementById("invitationApp").style.display = "block";
+
+        // Inicia el sonido del video de YouTube al presionar el botón
+        reproducirYouTube();
+
+        // Datos del invitado
+        document.getElementById("displayGuestName").innerText = guest.nombre;
+        const cuposNum = guest.cupos || 1;
+        document.getElementById("displayGuestPasses").innerText = `${cuposNum} ${cuposNum > 1 ? 'Cupos Reservados' : 'Cupo Reservado'}`;
+
+        // Enlace WhatsApp
+        const textoMsg = encodeURIComponent(`¡Hola Brian y Kelly! Confirmo asistencia a su boda.\n\nInvitado: ${guest.nombre}\nCupos confirmados: ${cuposNum}\nCódigo: ${guest.codigo}`);
+        document.getElementById("btnWhatsappRSVP").href = `https://wa.me/573017350946?text=${textoMsg}`;
+
+        updateCountdown();
+      } else {
+        errorMsg.style.display = "block";
+        errorMsg.innerText = "Código no encontrado. Por favor revisa el número.";
+      }
+    }
+
+    document.getElementById("passCodeInput").addEventListener("keypress", function(e) {
+      if (e.key === "Enter") {
+        validarCodigo();
+      }
+    });
+
+    // ==========================================
+    // 3. CUENTA REGRESIVA
+    // ==========================================
+    const weddingDate = new Date("2026-10-10T16:30:00").getTime();
+    function updateCountdown() {
+      const now = new Date().getTime();
+      const diff = weddingDate - now;
+
+      if (diff <= 0) {
+        document.querySelector(".countdown-grid").innerHTML = "<div style='grid-column: 1/-1; color: var(--gold-dark); font-weight:600; padding:10px 0;'>¡Hoy es el gran día! 🎉</div>";
+        return;
+      }
+
+      const d = Math.floor(diff / (1000 * 60 * 60 * 24));
+      const h = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+      const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+      const s = Math.floor((diff % (1000 * 60)) / 1000);
+
+      document.getElementById("days").textContent = String(d).padStart(2, '0');
+      document.getElementById("hours").textContent = String(h).padStart(2, '0');
+      document.getElementById("mins").textContent = String(m).padStart(2, '0');
+      document.getElementById("secs").textContent = String(s).padStart(2, '0');
+    }
+    setInterval(updateCountdown, 1000);
+  </script>
+</body>
+</html>
