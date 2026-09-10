@@ -424,6 +424,31 @@
       opacity: 0.8;
       color: var(--gold-main);
     }
+
+    @media (max-width: 768px) {
+      .footer-signature img,
+      .footer-signature svg {
+        width: 60px;
+        height: 60px;
+      }
+
+      footer {
+        margin-top: 30px;
+        padding-top: 20px;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .footer-signature img,
+      .footer-signature svg {
+        width: 50px;
+        height: 50px;
+      }
+
+      footer {
+        font-size: 0.65rem;
+      }
+    }
   </style>
 </head>
 <body>
@@ -562,8 +587,10 @@
         </p>
       </div> -->
 
+      <!-- FIRMA DEL PIE DE PÁGINA / PAGE SIGNATURE FOOTER -->
       <footer>
         <div class="footer-signature">
+          <!-- Puedes reemplazar este SVG con una imagen real (img src="firma.png") -->
           <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
             <g fill="none" stroke="currentColor" stroke-width="12" stroke-linecap="round" stroke-linejoin="round">
               <path d="M 50 60 L 50 140 M 130 70 L 50 110 L 130 140" />
