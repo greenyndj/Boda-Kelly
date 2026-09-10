@@ -454,7 +454,7 @@
         <p class="guest-badge">Invitación Especial Para:</p>
         <h2 class="guest-name" id="displayGuestName">Cargando...</h2>
         <div>
-          <span class="guest-passes" id="displayGuestPasses">1 Cupo </span>
+          <span class="guest-passes" id="displayGuestPasses">1 Cupos </span>
         </div>
       </div>
 
@@ -662,7 +662,7 @@
         // Datos del invitado
         document.getElementById("displayGuestName").innerText = guest.nombre;
         const cuposNum = guest.cupos || 1;
-        document.getElementById("displayGuestPasses").innerText = `${cuposNum} ${cuposNum > 1 ? 'Cupos ' : 'Cupo '}`;
+        document.getElementById("displayGuestPasses").innerText = `${cuposNum} ${cuposNum > 1 ? 'Cupos ' : 'Cupos '}`;
 
         // Enlace WhatsApp
         const textoMsg = encodeURIComponent(`¡Hola Brian y Kelly! Confirmo asistencia a su boda.\n\nInvitado: ${guest.nombre}\nCupos confirmados: ${cuposNum}\nCódigo: ${guest.codigo}`);
